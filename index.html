@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Closest Coin Calculator</title>
+<style>
+  body { font-family: Arial; padding: 20px; background: #f7f7f7; }
+  input, button { padding: 8px; margin: 5px; width: 150px; }
+  table { border-collapse: collapse; width: 100%; margin-top: 15px; }
+  th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+  th { background: #eee; }
+  .mostly76 { background-color: #ffd700; }
+  .closest { background-color: #90ee90; }
+</style>
+</head>
+<body>
+<h1>Closest Coin Calculator</h1>
+<input type="number" id="targetInput" step="0.1" placeholder="Enter Target Number">
+<button onclick="calculate()">Show Closest Results</button>
+
+<table>
+  <thead>
+    <tr>
+      <th>Combo Used</th>
+      <th>Total</th>
+      <th>Leftover</th>
+    </tr>
+  </thead>
+  <tbody id="results"></tbody>
+</table>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  // Full base coins set including your new numbers
+  const coins = [39,61.5,76,117,122,177.5,187.5,385,480,402.5,1453,2424,3660,6079];
+
+  function getClosestCombos(target, maxCoins=6){
+    let combos = [];
+    function helper(current, start){
+      const sum = current.reduce((a,b)=>a+b,0);
+      if(sum > target) return;
+      combos.push([...current, sum]);
+      if(current.length >= maxCoins) return;
+      for(let i=start;i<coins.length;i++){
+        helper([...current, coins[i]], i);
+      }
+    }
+    helper([],0);
+    combos.sort((a,b)=>b[b.length-1]-a[a.length-1]);
+    return combos.slice(0,3); // top 3 closest
+  }
+
+  window.calculate = function(){
+    const target = parseFloat(document.getElementById("targetInput").value);
+    if(isNaN(target)) return alert("Enter a valid number");
+
+    const resultsTable = document.getElementById("results");
+    resultsTable.innerHTML = "";
+
+    const combos = getClosestCombos(target);
+    if(combos.length === 0){
+      resultsTable.innerHTML = "<tr><td colspan='3'>No combos found under target</td></tr>";
+      return;
+    }
+
+    const closestSum = combos[0][combos[0].length-1];
+    combos.forEach(combo=>{
+      const sum = combo[combo.length-1];
+      const leftover = (target - sum).toFixed(2);
+      const coinsUsed = combo.slice(0,-1).join(" + ");
+      const tr = document.createElement("tr");
+      if(sum === closestSum) tr.classList.add("closest");
+      if(combo.filter(c=>c===76).length >= 2) tr.classList.add("mostly76");
+      tr.innerHTML = `<td>${coinsUsed}</td><td>${sum}</td><td>${leftover}</td>`;
+      resultsTable.appendChild(tr);
+    });
+  }
+});
+</script>
+</body>
+</html>
