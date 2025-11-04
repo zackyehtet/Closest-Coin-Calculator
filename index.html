@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coin Calculator</title>
+<style>
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(to right, #f5f7fa, #c3cfe2); color: #333; padding: 20px; min-height: 100vh; }
+  h1, h3 { text-align: center; color: #2c3e50; margin-bottom: 20px; text-shadow: 1px 1px 2px #fff; }
+  .controls { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+  input[type="number"] { padding: 10px; font-size: 16px; border-radius: 8px; border: 1px solid #aaa; width: 150px; text-align: center; }
+  button { padding: 10px 20px; font-size: 16px; background: #3498db; color: white; border: none; border-radius: 8px; cursor: pointer; transition: background 0.3s; }
+  button:hover { background: #2980b9; }
+  table { width: 100%; border-collapse: collapse; box-shadow: 0 4px 8px rgba(0,0,0,0.1); background: white; border-radius: 10px; overflow: hidden; }
+  th, td { padding: 12px; text-align: center; }
+  th { background-color: #3498db; color: white; }
+  tr:nth-child(even) { background-color: #f2f2f2; }
+  .closest { background-color: #2ecc71 !important; color: white; font-weight: bold; }
+  .mostly76 { background-color: #f1c40f !important; color: #333; font-weight: bold; }
+  @media (max-width: 600px) { input[type="number"], button { width: 100%; } }
+</style>
+</head>
+<body>
+
+<h1>Coin Calculator</h1>
+<h3>(Created By Zenin Empire)</h3> <br>
+
+<div class="controls">
+  <input type="number" id="targetInput" step="0.1" placeholder="Enter Target Number">
+  <button onclick="calculate()">Show Closest Results</button>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Combo Used</th>
+      <th>Total</th>
+      <th>Leftover</th>
+    </tr>
+  </thead>
+  <tbody id="results"></tbody>
+</table>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const coins = [39,61.5,76,117,122,177.5,187.5,385,480,402.5,1453,2424,3660,6079];
+
+  function getClosestCombos(target, maxCoins=7, maxResults=7){
+    let combos = [];
+
+    function helper(current, start){
+      const sum = current.reduce((a,b)=>a+b,0);
+      if(sum > target) return; // cannot exceed target
+      combos.push([...current, sum]);
+      if(current.length >= maxCoins) return;
+      for(let i=start;i<coins.length;i++){
+        helper([...current, coins[i]], i);
+      }
+    }
+
+    helper([], 0);
+
+    // Sort by total descending (closest under target)
+    combos.sort((a,b)=>b[b.length-1]-a[a.length-1]);
+
+    return combos.slice(0, maxResults); // top 5-7
+  }
+
+  window.calculate = function(){
+    const target = parseFloat(document.getElementById("targetInput").value);
+    if(isNaN(target)) return alert("Enter a valid number");
+
+    const resultsTable = document.getElementById("results");
+    resultsTable.innerHTML = "";
+
+    const combos = getClosestCombos(target);
+    if(combos.length === 0){
+      resultsTable.innerHTML = "<tr><td colspan='3'>No combos found under target</td></tr>";
+      return;
+    }
+
+    const closestSum = combos[0][combos[0].length-1];
+
+    combos.forEach(combo=>{
+      const sum = combo[combo.length-1];
+      const leftover = (target - sum).toFixed(2);
+      const coinsUsed = combo.slice(0,-1).join(" + ");
+      const tr = document.createElement("tr");
+      if(sum === closestSum) tr.classList.add("closest");
+      if(combo.filter(c=>c===76).length >= 2) tr.classList.add("mostly76");
+      tr.innerHTML = `<td>${coinsUsed}</td><td>${sum}</td><td>${leftover}</td>`;
+      resultsTable.appendChild(tr);
+    });
+  }
+});
+</script>
+
+</body>
+</html>
